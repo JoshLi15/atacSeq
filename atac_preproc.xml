@@ -1,0 +1,110 @@
+<tool id="atac_preproc" name="preprocessing ATAC-Seq" version="0.1.0" python_template_version="3.5">
+    <description>
+        description
+    </description>
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <expand macro="requirements"/>
+    <command detect_errors="exit_code"><![CDATA[
+        @IMPORTS@
+
+        """ LOAD and FORMAT data """
+        #set $a = ad.read($adata)
+
+        ## Extract the FACs information from the file names
+        #set $a.obs['facs_label'] = []
+        #for $line in $a.obs['cell_name'].tolist() 
+            #if 'MEP' in $line:
+                $a.obs['facs_label'].append('MEP')
+            #else:
+                $a.obs['facs_label']append($line.split('.bam')[0].lstrip('singles-').split('BM')[-1].split('-')[1])
+            #end if
+        #end for
+
+        ## format the cell names to match the metadata file
+        #set $a.obs_names = []
+        #for $x in $a.obs_names.tolist() 
+            $a.obs_names.append($x.split('/')[-1].split('.dedup.st.bam')[0])
+        #end for
+
+        ## Load metadata
+        #if $metadata:
+            epi.pp.load_metadata($a, $metadata, separator='\t')
+        #end if
+
+        ## Load gene/transcript annotation
+        ## TODO: make feature_type dependent from input??!!!! 'gene', dann auch key: gene_annotation und annotation='ENSEMBL'
+        #if $annotation:
+            epi.tl.find_genes($a,
+                gtf_file=$annotation,
+                key_added='transcript_annotation',
+                upstream=2000,
+                feature_type='transcript',
+                annotation='HAVANA',
+                raw=False)
+        #end if
+
+        """ PREPROCESSING AND FILTERING """
+        ## Check if the data matrix is binary - if not, binarize the data matrix
+        #if np.max($a.X) != 1.0:
+            epi.pp.binarize($a)
+        #end if
+
+        ## Filter the features
+        #if $min_cells:
+            epi.pp.filter_features($a, min_cells=$min_cells)
+        #end if
+        #if $max_cells:
+            epi.pp.filter_features($a, max_cells=$max_cells)
+        #end if
+
+        ## Identifying the most variable features and let the AnnData object keep the most variable nb_features many ones
+        #if $nb_features:
+            epi.pp.cal_var($a, show=False)
+            epi.pp.select_var_feature($a, nb_features=$nb_features, show=False)
+        #end if
+        
+        ## Filter the cells
+        #if $min_features:
+            epi.pp.filter_cells($a, min_features=$min_features)
+        #end if
+        #if $max_features:
+            epi.pp.filter_cells($a, max_features=$max_features)
+        #end if
+
+
+        ## Output
+        $a.write('anndataOut.h5ad')
+
+        ]]>></command>
+    <inputs>
+        <expand macro="input_data"/>
+        <param name="metadata" type="data" format="tsv" optional="true" label="Additional metadata"/>
+        <param name="annotation" type="data" format="gtf" optional="true" label="Gene/transcript annotation"/>
+        <param argument="min_features" type="integer" min="0" value="" optional="true" label="Min number of features" help="Minimum number of genes expressed required for a cell to pass filtering."/>
+        <param argument="max_features" type="integer" min="0" value="" optional="true" label="Max number of features" help="Maximum number of genes expressed required for a cell to pass filtering."/>
+        <param argument="min_cells" type="integer" min="0" value="" optional="true" label="Min number of cells" help="Minimum number of cells expressed required for a gene to pass filtering."/>
+        <param argument="max_cells" type="integer" min="0" value="" optional="true" label="Max number of cells" help="Maximum number of cells expressed required for a gene to pass filtering."/>
+        <param argument="nb_features" type="integer" min="0" value="" optional="true" label="Number variable features" help="Select the number of top most variable features. If not provided, all features will be considered."/>
+    </inputs>
+    <outputs>
+        <expand macro="anndata_outputs"/>
+    </outputs>
+    <tests>
+        <test>
+            <param name="adata" value="all_buenrostro_bulk_peaks.h5ad" />
+            <param name="metadata" value="metadata.tsv" />
+            <param name="annotation" value="gencode.v19.annotation.gtf" />
+            <param name="min_features" value="2000" />
+            <param name="max_features" value="25000" />
+            <param name="min_cells" value="5" />
+            <param name="nb_features" value="120000" />
+            <output name="anndata_out" file="buenrostro_pbmc.h5ad" ftype="h5ad"/>
+        </test>
+    </tests>
+    <help><![CDATA[
+        Write help text.
+    ]]></help>
+    <expand macro="citations"/>
+</tool>

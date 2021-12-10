@@ -1,0 +1,36 @@
+<macros>
+    <token name="@IMPORTS@"><![CDATA[
+        import scanpy as sc
+        import anndata as ad
+        import numpy as np
+        import pandas as pd
+        import episcanpy.api as epi
+        ]]>
+    </token>
+    <xml name="input_data">
+        <param name="adata" type="data" format="h5ad" label="Annotated data matrix"/>
+    </xml>
+    <xml name="anndata_outputs">
+        <data name="anndata_out" format="h5ad" from_work_dir="anndataOut.h5ad" label="${tool.name} (${method.method}) on ${on_string}: Annotated data matrix"/>
+    </xml>
+    <xml name="requirements">
+        <requirements>
+            <requirement type="package" version="0.1.0">episcanpy</requirement>
+            <requirement type="package" version="1.7.1">scanpy</requirement>
+            <yield />
+        </requirements>
+    </xml>
+    <xml name="citations">
+        <citations>
+            <citation type="bibtex">
+                @unpublished{lipski_a,
+                    author = {Lipski, A.},
+                    keywords = {bioinformatics, atac},
+                    priority = {2},
+                    title = {{TITLE TODO}},
+                    url = {URL TODO}
+                }
+                </citation>
+        </citations>
+    </xml>
+</macros>
