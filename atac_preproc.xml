@@ -93,14 +93,12 @@
     </outputs>
     <tests>
         <test>
-            <param name="adata" value="all_buenrostro_bulk_peaks.h5ad" />
-            <param name="metadata" value="metadata.tsv" />
-            <param name="annotation" value="gencode.v19.annotation.gtf" />
-            <param name="min_features" value="2000" />
-            <param name="max_features" value="25000" />
-            <param name="min_cells" value="5" />
+            <param name="adata" value="test_data.h5ad" />
+            <param name="min_features" value="200" />
+            <param name="max_features" value="2500" />
+            <param name="min_cells" value="2" />
             <param name="nb_features" value="120000" />
-            <output name="anndata_out" file="buenrostro_pbmc.h5ad" ftype="h5ad"/>
+            <output name="anndata_out" file="result.h5ad" ftype="h5ad"/>
         </test>
     </tests>
     <help><![CDATA[
